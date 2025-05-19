@@ -1,0 +1,152 @@
+Singaporean Tech Support
+Cisco Packet Tracer network building instructions
+
+READ README BEFORE PROCEEDING
+This tutorial uses the README found at "CiscoReadme.txt"
+
+0: connection icons
+     - 2 icons on each wire represent status of each device
+	- Red triangle: no connection at all
+	- Orange circle: connection warning, there is a connection but it is probably broken
+	- Green triangle: good connection
+
+0.5: Setting up the document
+     - Drag and drop 2 Network Devices > WAN Emulation > PT-Cloud devices
+	- These are Singtel servers
+	- Turn off each server, add 2 PT-CLOUD-NM-1CGE modules for 2 gigabitEthernet ports then turn them on again
+	- Connect the 2 Singtel devices using a Connections > Connections > Copper Cross-Over. Use the Ethernet6 port on each Singtel
+	- A Copper Cross-Over is a wire used to connect 2 similar devices (in our case both are Singtel servers)
+	- Drag and drop 2 Network Devices > Routers > 2911 (Cisco 2911 Integrated Services Router) devices
+	- These are routers used for branch office networking, routing between different sites, and internet connection
+	- Support dynamic routing, static routing, OSPF, EIGRP, BGP, VoIP
+	- Offer higher throughput and better performance than smaller routers in the same series
+	- Connect each 2911 to each Singtel using Connections > Connections > Copper Straight-Through wires, use gigabitEthernet ports on each device
+	- Copper Straight-Through wires are used to connect 2 different devices
+	- The 2 2911s are internet routers for different sites
+	- Drag and drop another 2 2911s, 1 per site, these are core routers
+	- Connect the core router and internet router of each site using Copper Cross-Over wires through gigabitEthernet ports
+	- ALL REMAINING STEPS IN PART 0.5 ARE TO BE DONE FOR EACH SITE
+	- Drag and drop 2 Network Devices > Switches > 3650 24PS, these are Distribution Routers
+	- Connect the distribution routers to each other using Copper Cross-Over wires from gigabitEthernet ports
+	- Connect each distribution router to the core router using Copper Straight-Through wires from gigabitEthernet ports
+	- Drag and drop 2 Network Devices > Switches > 2960, these are Switches
+	- Connect each switch to the other switch and both distribution routers using 2 Copper Cross-Over wires from fastEthernet ports, giving each switch 6 connections in total
+	- ALL REMAINING STEPS IN PART 0.5 ARE TO BE DONE FOR EACH 2960 SWITCH
+	- Drag and drop 3 End Devices > End Devices > PC, these are the end user computers
+	- Connect each PC to the switch using Copper Straight-Through wires from fastEthernet ports
+	- SAVE YOUR FILE
+	- A set up version can be found at "blank template.pkt"
+
+1: Set up PCs
+     FOR EACH PC IN THE NETWORK,
+	- Look at the IP Address (given in README)
+	- Look at which VLAN on the Distribution Router above the PC uses
+	- The IP address of this VLAN is the default gateway for the PC
+	- Compute the subnet mask for the VLAN, this is a "IP address" with first x bits 1 and remaining (32-x) bits 0, where x = ln(number of hosts + 2)/ln2
+	- The PC has the same subnet mask as the VLAN
+	- Look at the DNS Server address (given in README)
+	- Set the DNS Server and default gateway in PC > Config > Global > Settings > IPv4
+	- Set the IP address and subnet mask in PC > Config > Interface > FastEthernet0 > IP configuration > IPv4
+
+2: Set up access switches
+     - Use "enable" then "configure terminal"
+	- Use "enable secret [password]" to enable password usage
+	- Use "service password-encryption" to encrypt password
+	- Use "hostname [host name]" to set host name
+	- Bundle interfaces into LACP EtherChannels as following:
+	- Enter the port range using "interface range [port range]"
+	- Use "switchport mode trunk" then "channel-group [EtherChannel number] mode active" to bundle the ports
+	- Use "exit" to return
+	- Then use "interface port-channel [EtherChannel number]" to enter the bundled EtherChannel port
+	- Use "switchport mode trunk" again to set it to trunk mode
+	- Use "exit to go back, now our EtherChannel is ready
+	- Create VLANs as following:
+	- Use "interface [port name]" to enter the VLAN port
+	- Use "switchport mode access" then "switchport access vlan [VLAN number]" to set up the VLAN
+	- Use "exit" to return
+	- Use "exit again to exit configuration mode
+	- Use "show etherchannel summary" and "show vlan brief" to check VLANs and EtherChannels
+	- Use "write memory" to save configuration
+
+3: Set up distribution routers
+     - Use "enable" then "configure terminal"
+	- Use "enable secret [password]" to enable password usage
+	- Use "service password-encryption" to encrypt password
+	- Use "hostname [host name]" to set host name
+	- Set up port IP addresses as following:
+	- Use "interface [port name]" to enter the port, port name is "fa[port number]" for normal ports and "vlan [port number]" for VLANs
+	- IF A NON VLAN PORT IS USED, FIRST USE "no switchport" TO ENABLE IP ADDRESSING
+	- CHECK AVAILABLE IP ADDRESSES: first IP address is network address and CANNOT BE USED, last IP address is broadcast address and CANNOT BE USED
+	- Use "ip address [IP address] [subnet mask]" to set the IP address, subnet mask is given in README either in the format "[IP address]/[number of subnet bits]" by giving number of available hosts
+	- Use "no shutdown" to turn on the port
+	- Use "exit" to return
+	- Set up routing using "ip route 0.0.0.0 0.0.0.0 [IP address] [distance]"
+	- The first 0.0.0.0 does not matter, since the second 0.0.0.0 is a subnet mask used for IP address filtering
+	- Bundle interfaces into LACP EtherChannels as following:
+	- Enter the port range using "interface range [port range]"
+	- Use "switchport trunk encapsulation dot1q" if needed then "switchport mode trunk" then "channel-group [EtherChannel number] mode active" to bundle the ports
+	- Use "exit" to return
+	- Then use "interface port-channel [EtherChannel number]" to enter the bundled EtherChannel port
+	- Use "switchport trunk encapsulation dot1q" if needed then "switchport mode trunk" again to set it to trunk mode
+	- Use "exit to go back, now our EtherChannel is ready
+	- For each VLAN, confirm its existence by using "vlan 1" to enter the VLAN then "exit" to return
+	- Use "exit again to exit configuration mode
+	- Use "show etherchannel summary" and "show vlan brief" to check VLANs and EtherChannels
+	- Use "write memory" to save configuration
+
+4: Set up core routers
+     - Use "enable" then "configure terminal"
+	- Use "enable secret [password]" to enable password usage
+	- Use "service password-encryption" to encrypt password
+	- Use "hostname [host name]" to set host name
+	- Set IP address for each port as following:
+	- Use "interface [port name]" to enter the port
+	- Set the IP address using "ip address [IP address] [subnet mask]"
+	- Turn on the port using "no shutdown" then use "exit" to return
+	- Next set up OSPF
+	- Use "router ospf [process number]" to define OSPF
+	- FOR EACH PORT use "network [port IP address] [wildcard mask of port IP address = ~(subnet mask)] area [area number]" to define OSPF network rules
+	- Use "redistribute static metric 1 subnets" to redistribute OSPF routes
+	- Use "exit" to return
+	- For each required port with OSPF do the following:
+	- Use "interface [port name]" to enter the port
+	- Turn on OSPF using "ip ospf [process number] area [area number]"
+	- Use "exit" to return
+	- SEE CONNECTED PORTS IN PHYSICAL VIEW WITH LITERALLY WIRES
+	- Configure all static IP routes regardless primary or secondary using "ip route [IP address of destination, in this case the NETWORK ADDRESS NOT ROUTER ADDRESS for VLANs on distribution routers that we must get to] [subnet mask of destination] [IP address of next stop, in this case the IP address of ports on the distribution routers that is connected by wire to the core router] [distance]"
+	- Use "exit" to return
+	- Use "exit" again to exit configuration mode
+	- Use "show ip ospf", "show ip ospf neighbor", "show ip route", "show ip route static" to check everything is set up correctly
+	- Use "write memory" to save configuration
+
+5: Set up internet routers
+     - Use "enable" then "configure terminal"
+	- Use "enable secret [password]" to enable password usage
+	- Use "service password-encryption" to encrypt password
+	- Use "hostname [host name]" to set host name
+	- Set IP address for each port as following:
+	- Use "interface [port name]" to enter the port
+	- Set the IP address using "ip address [IP address] [subnet mask]"
+	- Turn on the port using "no shutdown" then use "exit" to return
+	- Next set up OSPF
+	- Use "router ospf [process number]" to define OSPF
+	- FOR EACH PORT use "network [port IP address] [wildcard mask of port IP address = ~(subnet mask)] area [area number]" to define OSPF network rules
+	- Use "exit" to return
+	- Next configure hello and dead intervals for Singtel connections, by default hello is 10 and dead is 40
+	- For each connection to Singtel, do the following:
+	- SEE CONNECTED PORTS IN PHYSICAL VIEW WITH LITERALLY WIRES
+	- Use "interface [port name]" to enter the port
+	- Use "ip ospf hello-interval [desired value]" and "ip ospf dead-interval [desired value]" to configure
+	- Use "exit" to return
+	- For each port requiring configuration of OSPF cost, do the following:
+	- Use "interface [port name]" to enter the port
+	- Use "ip ospf cost [desired cost]" to set the cost
+	- Use "exit" to return
+	- For each required port with OSPF do the following:
+	- Use "interface [port name]" to enter the port
+	- Turn on OSPF using "ip ospf [process number] area [area number]"
+	- Use "exit" to return
+	- Use "show ip ospf", "show ip ospf neighbor", "show ip ospf" to check everything is set up correctly
+	- Use "write memory" to save configuration
+
+The completed network can be viewed at "completed network.pkt"

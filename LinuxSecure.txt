@@ -1,0 +1,164 @@
+Singaporean Tech Support
+Linux system securing instructions
+
+READ README AND SOLVE FORENSIC QUESTIONS BEFORE PROCEEDING
+
+1: Check logs
+     - Logs are in /var/log/ and /home/*/.bash_history and /home/*/.sh_history
+	- Usually there is nothing much to see here though
+
+2: Secure root
+     - Set "PermitRootLogin" to "no" in /etc/ssh/sshd_config
+
+3: Users securing
+     - Secure /etc/passwd file by running "sudo chown root:root /etc/passwd" then "sudo chmod 644 /etc/passwd"
+	- Install auditd using "sudo apt install auditd"
+	- Run "sudo systemctl start auditd" then "sudo systemctl enable auditd" to start it
+	- Then we will audit everything, open the configuration file using "sudo nano /etc/audit/rules.d/audit.rules"
+	- Then add all the following:
+	     "-a always,exit -F arch=b64 -S all"
+		"-a always,exit -F arch=b32 -S all"
+		"-w /etc -p wa"
+		"-w /var/log -p wa -F ! -w /var/log/audit/audit.log"
+		"-w /usr/bin -p wa"
+		"-w /bin -p wa"
+		"-w /etc/passwd -p wa"
+		"-w /etc/shadow -p wa"
+		"-w /etc/sudoers -p wa"
+		"-w /etc/group -p wa"
+		"-w /etc/hostname -p wa"
+		"-w /var/log/lastlog -p wa"
+		"-w /var/log/auth.log -p wa"
+		"-w /var/log/wtmp -p wa"
+		"-w /var/log/btmp -p wa"
+		"-w /etc/ssh/sshd_config -p wa"
+		"-w /var/log/kern.log -p wa"
+		"-w /etc/sysctl.conf -p wa"
+	- Then restart auditd using "sudo systemctl restart auditd"
+	- Locate your HOSTS file at /etc/hosts, delete everything except those below
+	     "127.0.0.1 localhost"
+		"127.0.1.1 ubuntu" or equivalent for the distribution
+		"::1 ip6-localhost ip6-loopback"
+		"fe00::0 ip6-localnet"
+		"ff00::0 ip6-mcastprefix"
+		"ff02::1 ip6-allnodes"
+		"ff02::2 ip6-allrouters"
+	- Disable guest user by entering "auth required pam_succeed_if.so user != guest" in the file opened by "sudo nano /etc/pam.d/common-auth"
+	- Use "awk -F: ‘$3 == 0 {print $1}’ /etc/passwd" to get all users with UID 0 and have superuser permissions
+	- Use "awk -F: ‘$7 !~ /(nologin|false)/ {print $1}’ /etc/passwd" to get all users allowed to login
+	- In general NONE of the users should have a root account, THIS IS NOT SAME AS ADMIN, ADMIN IS SUDOER NOT ROOT
+	- NEVER TOUCH OUR CURRENT ACCOUNT, WE WOULD RATHER LOSE 5 POINTS THAN LOCK OURSELVES OUT OF THE MACHINE
+	- Unroot a root account using "sudo usermod -u 1001 [username]" to clear permissions then "sudo find / -user 0 -exec chown username:username {} \;" to update permissions for individual files
+	- Delete unauthorised users using "sudo userdel -r [username]" and update his group using "sudo groupdel [username]"
+	- Next turn off auto login
+	- If /etc/gdm/custom.conf exists then open it and under the [daemon] section check for "AutomaticLogin = [username]", delete everything like that as long as it isnt your own username, then run "sudo systemctl restart gdm" to apply changes
+	- If /etc/lightdm/lightdm.conf exists or /etc/lightdm/lightdm.conf.d exists then open it, go to the [Seat:*] section and look at lines "autologin-user=[username]", delete all of that as long as it isnt your own username, then run "sudo systemctl restart lightdm" to apply changes
+	- If /etc/sddm.conf exists then open it and under the [Autologin] section look for lines "User=[username]" and delete all these except for your own one, then run "sudo systemctl restart sddm" to apply changes
+	- Check sudoers group using "grep sudo /etc/group"
+	- Add sudoers (admins) by using "sudo usermod -aG sudo [username]"
+	- Remove non admins by using "sudo deluser [username] sudo" and use "sudo rm /etc/sudoers.d/[username]" to remove sudoer configuration files if they exist, it is ok if the command fails because file not found
+	- Do same thing for "admin" group as "sudo" group if it exists
+	- Use "sudo ls -Ra /home/[username]" FOR EVERY USER (that isnt a system auto created user) and look through it for unauthorised files
+	- Delete unauthorised files using "rm -r [file path]"
+	- If for some reason /home/[username] cannot be found, look at the 6th field after using "grep [username] /etc/passwd", note that fields are separated using : ,and the command should return something like "username:x:1001:1001:Display Name:/this/is/his/home/directory/pls/copy/this/path:/bin/bash"
+	- Use "sudo apt-get install synaptic" to get it
+	- Open it using "sudo synaptic", this is a GUI tool
+	- Go to synaptic app > "status" tab on left menu > installed
+	- Delete whatever shouldnt be there
+	- Find your common passwords file, this is at /etc/pam.d/common-password or /etc/pam.d/system-auth whichever exists
+	- Run "sudo apt-get install libpam-cracklib -y"
+	- Add the line "password requisite pam_unix.so remember=8 minlen=8" to common passwords file
+	- In /etc/login.defs change PASS_MAX_DAYS to 14 and PASS_MIN_DAYS to 8 and PASS_WARN_AGE to 8
+	- In common passwords file add the line "password requisite pam_pwquality.so minlen=8 minclass=4"
+	- In the common passwords file, find the line containing pam_cracklib.so add at the end "ucredit=-1 lcredit=-1 dcredit=-1 ocredit=-1"
+	- In /etc/login.defs change ENCRYPT_METHOD to SHA512
+	- Find your system authentication file, this is at /etc/pam.d/common-auth or /etc/pam.d/system-auth whichever exists
+	- In system authentication file add the line "auth required pam_tally2.so onerr=fail deny=7 unlock_time=600"
+	- Again in system authentication file add the line "account required pam_tally2.so reset"
+	- FOR EVERY USER use "sudo passwd [username]" to change his password
+	- You will be prompted to input the new password after running the command, just enter it in, note that the cmd window may not show the new password
+	- MAKE SURE YOUR CAPSLOCK IS OFF WHILE ENTERING PASSWORD
+	- Use SingaporeanTechSupport1965_ as password for all users AND MAKE SURE YOU CHANGE ROOT ACCOUNT (root) PASSWORD
+
+4: Automatic updates 
+     (for Ubuntu / Mint / Debian etc)
+          - Run "sudo apt update" then "sudo apt upgrade"
+		- Install unattended-upgrades package using "sudo apt install unattended-upgrades" then use "sudo dpkg-reconfigure --priority=low unattended-upgrades"
+		- Run "sudo nano /etc/apt/apt.conf.d/10periodic" and add the below lines into the file
+		     APT::Periodic::Update-Package-Lists "1";
+			APT::Periodic::Download-Upgradeable-Packages "1";
+			APT::Periodic::AutocleanInterval "7";
+			APT::Periodic::Unattended-Upgrade "1";
+	(for Fedora / Red Hat etc)
+	     - Run "sudo dnf check-update" then "sudo dnf upgrade"
+		- Install the package using "sudo dnf install dnf-automatic"
+		- Run "sudo systemctl enable --now dnf-automatic.timer" to on the timer
+		- In the file /etc/dnf/automatic.conf under [commands] section add "upgrade_type = default"
+	(for Arch etc)
+	     - Run "sudo pacman -Syu"
+		- Then use "sudo systemctl enable --now cron" to allow automatic updates
+		- Edit the crontab using "sudo crontab -e"
+		- Add the line "26 07 * * * pacman -Syu --noconfirm" to the crontab, this checks for updates at 0726 every day, in honour of the teacher for Singapore International Math Olympiad
+
+5: Secure ports
+     - Use "sudo ss -l" to get all open ports
+	- Only ports specified in readme (80, 443) and ports redirecting to 127.0.0.1.[port number] are ok, everything else must be closed, especially 20, 21, 23, 135, 411, 412
+	- To close a port, first use "sudo lsof -i :[port number]" to get the programme name
+	- Then use "whereis [programme name]" to get the file path
+	- Then use "dpkg -S [path]" to get the origin package
+	- If there is no package, run "sudo rm [path]" to delete the .exe then use "sudo killall -9 [programme name]" to force stop the programme that somehow runs without a .exe
+	- If there is a package, use "sudo apt-get purge [package name]" to delete it BUT FIRST SEARCH ONLINE TO ENSURE IT ISNT A SYSTEM PACKAGE
+
+6: Enable firewall
+     - On the firewall with "sudo ufw enable"
+	- Audit it using "sudo ufw logging on"
+	- Run "sudo ufw deny [port number]" on ports 20, 21, 23, 135, 411, 412
+
+7: Configure services
+     - Use "sudo apt-get install bum" then "sudo bum" to open Bum GUI to check services
+	- Look through all the services and disable anything suspicious
+
+8: Check for rootkits
+     - Run "sudo apt-get install rkhunter chkrootkit" to get the software (syntax differs on non Ubuntu / Debian / Mint systems)
+	- Run "sudo rkhunter --update" then "sudo rkhunter --check -v"
+	- Use "sudo rm [path]" to remove all detect rootkits SEARCH ONLINE FOR THE PATH BEFORE REMOVING, THERE MAY BE FALSE POSITIVES
+	- Run "sudo chkrootkit /" and remove whatever is found
+	- Check /etc for anything suspicious
+	- Run "sudo apt-get update" then "sudo apt-get upgrade" again just in case
+
+9: Secure cron
+     - Run "sudo chown -R root:root /etc/*cron*" and "sudo chmod -R 600 /etc/*cron*" to change permissions for most cron things
+	- Run "sudo chown -R root:root /var/spool/cron" and "sudo chmod -R 600 /var/spool/cron" to change permissions for some other cron things
+	- Run "sudo vim -p /etc/*crontab" and "sudo vim -p /etc/*cron*/*" to open cron files and delete whatever shouldnt be there
+
+10: Software updates
+     - Run "sudo apt-get update" and "sudo apt-get upgrade" (yes, again)
+	- For required apps, search online "[app name] latest stable version"
+	- Then search online "[Linux distribution name] install [app name] [version number] and follow their instructions, make sure to have Google Translate ready if we find a Russian page
+
+11: Configuration files
+     - Check configuration files for required services as specified in readme (DO THIS LAST)
+
+12: Check for insecure file attributes
+     - Remove world-writable directories (anyone can write into these) using "sudo find / -xdev -type d \( -perm -0002 -a ! -perm -1000 \) -print" then for each found directory use "sudo chmod +t [path]"
+	- Remove world-writable files (anyone can write into these) using "sudo find / -xdev -type f -perm -0002 -print" then for each file use "sudo chmod o-w [path]"
+	- Remove files and directories with no owner using "sudo find / -xdev \( -nouser -o -nogroup \) -print" then for each path use "chown root:root [path]" to set owner to root
+
+13: Configuring Apache Server (if required as specified in readme)
+     - Locate the /etc/apache2/apache2.conf and open it
+	- Add / change value for following lines
+	     "TraceEnable off"
+		"User apache"
+		"Group apache"
+		"ServerSignature Off"
+		"ServerTokens Prod"
+		<Directory /var/www/html>
+		     Options -Indexes -FollowSymLinks -Includes -ExecCGI
+			AllowOverride None
+			Require all granted
+		</Directory>
+		AllowOverride None
+	- CONFIRM SYNTAX IS CORRECT using "sudo apachectl configtest"
+	- Restart the Apache Server using "sudo systemctl restart apache2"
+
+DONE

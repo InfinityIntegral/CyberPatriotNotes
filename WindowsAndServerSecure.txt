@@ -1,0 +1,612 @@
+Singaporean Tech Support
+Windows and Server system securing instructions
+
+READ README AND SOLVE FORENSIC QUESTIONS BEFORE PROCEEDING
+
+1: View hidden files
+     - Windows Explorer > view (in top menu) > enable "hidden items" in top menu (do this in maximised window)
+	- Windows Explorer > view (in top menu) > click on icon of "options" in top menu (clicking on name will not work), this opens "Folder Options" window > view (tab at top of "folder options") > enable everything about showing things > PRESS APPLY
+	- For Server 2008, open "folder options" window from Control Panel
+
+2: Clear "net share"
+     - Run cmd as admin
+	- Enter in cmd "net share"
+	- Enter in cmd "net share /delete [file name]" for EVERY listed file
+	- Reboot computer
+	- "C$" "ADMIN$" "IPC$" may require special treatment
+
+3: Set up Malwarebytes
+     - Download Malwarebytes from https://www.malwarebytes.com
+	- Remember to update it after it is installed
+	- Uncheck "enable pro edition"
+	- Select "full scan" and scan it in background
+	- PROCEED TO DO OTHER THINGS FIRST, COME BACK LATER AFTER SCAN FINISHES
+	- (after scanned) click "show results"
+	- Select all results and press "remove"
+
+4: Set up CCleaner
+     - Download CCleaner from https://www.ccleaner.com with whatever settings they recommend
+	- Unable "intelligently scan for cookies"
+	- Click "analyse" and wait for it
+	- Select all results and click "run cleaner"
+	- Go to "registry " tab and "scan for issues"
+	- Select all results and click "fix issues"
+	- Click "yes" and save the .reg
+
+5: Set up Spybot
+     - Download Spybot from https://www.safer-networking.org/free-download and when installing select "I want more control…" option
+	- Click "open start center"
+	- Click "check for new malware signatures"
+	- Click "finish"
+	- Click "update until latest" on "update" pop up window then close it
+	- Select "system scan" in "start center" pop up window
+	- Run scan in background
+	- PROCEED TO DO OTHER THINGS FIRST, COME BACK LATER AFTER SCAN FINISHES
+	- Remove all indicated programmes after scan finishes
+
+6: Deleting unwanted programmes
+     - Go to control panel > programmes > uninstall a programme
+	- uninstall everything except those necessary (have readme and common sense… pls…)
+if access denied because program in use, end it from task manager > "processes" tab or run (Win + R) "resmon" to open Resource Monitor > Network tab > TCP connections (or task manager > "details" tab in Windows 10) then delete it
+     - next delete programmes hidden by Registry key
+	- enter "regedit" app
+	- go to HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows/CurrentVersion /Uninstall  in Registry and HKEY_CURRENT_USER/SOFTWARE/Microsoft/Windows/CurrentVersion /Uninstall , this is a complete list of installed software
+	- take note of everything that should not be there and delete it as shown below
+	- run (Win + R) the "UninstallString" of the programme to run the uninstaller
+	- delete anything in task manager > startup
+	- then if it is still there, right click and delete the Registry key
+	- run CCleaner Registry scan after deleting all undesirable programmes
+
+7: Update whatever need to be updated
+
+8: Users and groups configuration
+     - enter MMC (Microsoft Management Console)
+	- in MMC, go to files > add / remove snap ins > local users and groups
+	- disable NOT DELETE whoever isnt supposed to be there
+	- disable Guest account
+	- rename default accounts "Administrator" and "Guest" to "YouArentAdmin" and "YouShouldntExist", DO NOT DO SO IF WE ARE USING DEFAULT ADMIN ACCOUNT
+	- for each remaining account, check his admin membership, password expiry overwrite, and if his password is insecure then set it to "SingaporeanTechSupport1965_"
+
+9: Set up server roles SERVER ONLY
+     - Go to server manager > add or remove a role > next
+	- Select all server roles not specified in readme and press "next"
+	- Enable the bottom checkbox "remove the … server role" and click "next"
+	- Click "finish" to save
+
+10: Firewall configuration
+     - go to MMC > files > add / remove snap ins > Windows Firewall with advanced security
+	- go to "Windows Firewall Properties"
+	- for EVERY PROFILE and EVERY TAB IN EACH (domain / private / public) do the following
+	- ensure firewall is on
+	- set "inbound connections" to "blocked"
+	- set "outbound connections" to "allowed"
+	- go to logging > customise
+	- turn on logging for everything
+	- Change log size limit to 6500
+	- REMEMBER YOU NEED THIS FOR EVERY TAB IN EVERY PROFILE
+	- Then go to "Windows Firewall with Advanced Security > inbound rules"
+	- Disable (right click context menu > disable) all rules involving telcat, nc, ncat, netcat
+	- Disable "file and printer sharing" rules
+	- Disable any "remote" rules including "remote assistance" and "remote desktop"
+	- Disable SNMP and SMTP rules
+
+11: Clear DNS cache
+	- Enter "ipconfig /flushdns" in admin cmd
+
+12: Configure policies
+     - Add "Group Policy Object Editor" snap in in MMC
+	- Expand / open tab "computer configuration", "Windows settings", "security settings", "account policies" and go through the following
+	- DO NOT TOUCH "NETWORK SERVICE" AND "LOCAL SERVICE"
+	- DO NOT TOUCH ANYTHING RELATED TO CYBERPATRIOT ESPECIALLY SCORING BOT
+	- Important:
+	     Password policy
+		     Enforce password history - 8
+			Maximum password age - 14
+			Minimum password age - 8
+			Minimum password length - 8
+			Password must meet requirements - enable
+			Store passwords in plain text - disable
+		Account lockout policy
+			Account lockout duration - 10
+			Account lockout threshold - 7
+			Reset account lockout counter - 10
+			Audit policy - audit everything
+		User rights assignment
+			Access this computer from the network - no one
+			Bypass traverse checking - no one
+			Force shutdown from a remote system - no one
+		Security options
+			Prevent users from installing printer drivers - enabled
+			Prevent CD-ROM access - enabled
+			Do not require CTRL + ALT + DELETE - disabled
+			Do not allow anonymous enumeration of SAM accounts - enabled
+			Do not allow anonymous enumeration of SAM accounts and shares - enabled
+			Name pipes that can be accessed anonymously - disabled
+			Remotely accessible [something] - remove all entries under all such fields
+			Restrict anonymous access - enabled
+		User rights assignment (others)
+			Access credential manager as… - admin
+			Act as part of OS - no one
+			Add workstation to domain - no one
+			Adjust memory quota for process - no one
+			Allow logon locally - admin
+			Allow logon through RDS - no one
+			Backup files / directories - admin
+			Change system time - no one
+			Change time zone - no one
+			Create page file - no one
+			Create token object - admin
+			Create global objects - admin
+			Create permanent shared objects - no one
+			Create symbolic links - admin
+			Debug programmes - no one
+			Deny access to this computer - no one
+			Deny logon as batch job - no one
+			Deny logon as service - no one
+			Deny logon locally - no one
+			Deny logon through RDS - no one
+			Enable computer and user accounts - admin
+			Generate security audits - no one
+			Impersonate a client after authentication - no one
+			Increase a process working set - no one
+			Increase a scheduling priority - admin
+			Load and unload device drivers - admin
+			Lock pages in memory - admin
+			Logon as batch job - no one
+			Logon as service - no one
+			Manage auditing and security log - admin
+			Modify object label - admin
+			Modify firmware environment values - admin
+			Perform volume maintenance task - admin
+			Profile single processes - admin
+			Profile system performance - admin
+			Remove computer from docking station - admin
+			Replace a process level token - admin
+			Restore files and directories - admin
+			Shutdown the system - admin
+			Synchronise directory service data - admin
+			Take ownership of files - admin
+		Security options (others)
+			Admin account - disabled unless using default admin account
+			Guest account - disabled
+			Limit local use of blank passwords - enabled
+			Rename admin account - rename to "YouArentAdmin" if not done so and not using the account
+			Rename guest account - rename to "YouShouldntExist" if not already done
+			Audit [something] - enable all
+			Force audit policy - enabled
+			Shutdown machine if unable to log security audits - disabled
+			Machine access restrictions - not defined
+			Machine launch restrictions - not defined
+			Allow undock without having to logon - disabled
+			Allowed to format and eject removable media - admin only
+			Restrict floppy disk access - enabled
+			Allow server operators to schedule tasks - disabled
+			LDAP server signing requirements - require
+			Refuse machine account password changes - enabled
+			Digitally encrypt or sign secure channel data - enable all
+			Disable machine account password changes - enabled
+			Maximum machine password age - 13 days
+			Require strong session key (>= Windows 2000) - enabled
+			Display user information when session… - do not display
+			Do not display last user name - enabled
+			Message text for users attempting to logon - leave blank
+			Message title for users attempting to logon - leave blank
+			Number of previous logons to cache - 0
+			Prompt user to change password before expiration - 8 days
+			Require domain controller authentication - disabled
+			Require smart card - disabled
+			Smart card removal behaviour - no action
+			Digitally sign communications - disabled
+			Send unencrypted passwords to 3rd party SMB servers - disabled
+			Amount of idle time before suspending session - 45min
+			Digitally sign communications - disabled
+			Disconnect clients when logon hour expires - disabled
+			Server SPN target name - dont touch
+			Allow anonymous SID / name translation - disabled
+			Do not allow storage of passwords - enabled
+			Let everyone permission apply to anonymous users - disabled
+			Shares that can be accessed anonymously - clear all
+			Sharing and security - classic
+			Allow local system to use… - disabled
+			Allow local system to null session fallback - dont touch
+
+13: Creating a system restore point
+     - Right click "my computer" > properties > "system protection" tab > "configure"
+	- Turn on system protection
+	- Set maximum usage to 2GB
+	- Click ok
+	- Click on "create" button
+	- Type a description to create the restore point
+	- Click "create"
+	- Click "ok"
+
+14: Services configuration FIRST CHECK README, YOU MUST NOT TOUCH REQUIRED SERVICES
+     - MMC > services snap in
+	- Disable all non default services, but check online first to see
+	- To disable a service, go to right click context menu > "stop" then go to drop down menu next to "startup type" and select "disabled"
+	- Must disable Telnet, Telephony, RIP Listener, SNMP Trap
+	- Common non default services (disable all):
+	     SMTP
+		Bonjour
+		Remote access auto connection manager
+		Remote access connection manager
+		Remote desktop config
+		Remote desktop services
+		Remote registry
+		RIP routing
+		World Wide Web publishing service (this is for IIS server)
+		NetMeeting remote desktop sharing
+		Simple file sharing
+		SSDP discovery service
+		Windows messenger service
+	- Windows default services and configuration below:
+	     ActiveX installer - disabled
+		 Adaptive brightness - disabled
+		 Application experience - manual
+		 Application identity - manual
+		 Application information - manual
+		 Application layer gateway service - disabled
+		 Background intelligent transfer service - manual
+		 Base filtering engine - automatic
+		 BitLocker drive encryption service - manual
+		 BitLocker level backup engine service - disabled
+		 Bluetooth support service - disabled
+		 Certificate propagation - disabled
+		 CNG key isolation - manual
+		 COM+ event system - manual
+		 COM+ system application - manual
+		 Computer browser - manual
+		 Credential manager - manual
+		 Cryptographic services - automatic
+		 DCOM server process launcher - automatic
+		 Desktop window manager session manager - automatic
+		 DHCP client - automatic
+		 Diagnostic policy service - automatic
+		 Diagnostic service host - manual
+		 Diagnostic system host - manual
+		 Disk defragmenter - disabled
+		 Distributed link tracking client - manual
+		 Distributed transaction coordinator - manual
+		 DNS client - automatic
+		 Encrypting file system - manual
+		 Extensible authentication protocol - manual
+		 Fax - disabled
+		 Function discovery provider host - manual
+		 Function discovery resource publication - manual
+		 Group policy client - automatic
+		 Health key and certificate management - manual
+		 HomeGroup listener - disabled
+		 Human interface device access - disabled
+		 IKE and AuthIP IPsec keying modules - manual
+		 Interactive services detection - disabled
+		 Internet connection sharing - disabled
+		 IP helper - manual
+		 IPsec policy agent - manual
+		 KtmRm for distributed transaction coordinator - disabled
+		 Link-Layer topology discovery mapper - manual
+		 Microsoft .NET framework NGEN v2.0 - manual
+		 Microsoft iSCSI initiator service - disabled
+		 Microsoft software shadow copy provider - disabled
+		 Multimedia class scheduler - disabled
+		 Net.Tcp port sharing service - disabled
+		 Netlogon - disabled
+		 Network access protection agent - manual
+		 Network connections - manual
+		 Network list service - manual
+		 Network location awareness - manual
+		 Network store interface service - automatic
+		 Parental controls - disabled
+		 Peer name resolution protocol - disabled
+		 Peer network grouping - disabled
+		 Peer networking identity manager - disabled
+		 Performance logs & alerts - manual
+		 Plug and play - disabled
+		 PnP-X IP bus enumerator - disabled
+		 PNRP machine name publications service - disabled
+		 Portable device enumerator service - disabled
+		 Power - automatic
+		 Print spooler - disabled
+		 Problems report and solutions control panel support - manual
+		 Programme compatibility assistant service - manual
+		 Protected storage - manual
+		 Quality Windows audio video experience - disabled
+		 Remote access auto connection manager - disabled
+		 Remote access connection manager - disabled
+		 Remote desktop configuration - disabled
+		 Remote desktop services - disabled
+		 Remote procedure call - automatic
+		 Remote procedure call locator - manual
+		 Remote registry - disabled
+		 RIP routing - disabled
+		 Routing and remote access - disabled
+		 Remote procedure call endpoint mapper - automatic
+		 Secondary logon - disabled
+		 Secure socket tunneling protocol service - disabled
+		 Security accounts manager - automatic
+		 Security center - automatic
+		 Server - disabled
+		 Shell hardware detection - disabled
+		 Smart card - disabled
+		 Smart card removal policy - disabled
+		 SNMP trap - disabled
+		 Software protection - automatic
+		 SPP notification service - manual
+		 SSDP discovery - disabled
+		 Superfetch - manual
+		 System event notification service - automatic
+		 Tablet PC input service - disabled
+		 Task scheduler - disabled
+		 TCP/IP NetBIOS helper - disabled
+		 Telephony - disabled
+		 Telnet - disabled
+		 Themes - manual
+		 Thread ordering server - manual
+		 TP AutoConnect service - disabled
+		 TP VC gateway service - disabled
+		 TPM base services - disabled
+		 UPnP device host - disabled
+		 User profile service - automatic
+		 Virtual disk - manual
+		 VMware snapshot provider - manual
+		 VMware tools - automatic
+		 Volume shadow copy - disabled
+		 WebClient - disabled
+		 Windows audio - automatic
+		 Windows backup - manual
+		 Windows biometric service - disabled
+		 Windows CardSpace - disabled
+		 Windows colour system - disabled
+		 Windows connect now - disabled
+		 Windows defender - automatic
+		 Windows driver foundation - manual
+		 Windows error reporting service - manual
+		 Windows event collector - disabled
+		 Windows event log - automatic
+		 Windows firewall - automatic
+		 Windows font cache - disabled
+		 Windows image acquisition - disabled
+		 Windows installer - manual
+		 Windows management instrumentation - automatic
+		 Windows media player network sharing service - disabled
+		 Windows modules installer - manual
+		 Windows presentation foundation - disabled
+		 Windows remote management - disabled
+		 Windows search - automatic
+		 Windows time - manual
+		 Windows update - automatic
+		 WinHTTP web proxy autodiscovery service - disabled
+		 Wired autoconfig - manual
+		 WLAN autoconfig - manual
+		 WMI performance adapter - disabled
+		 Workstation - automatic
+		 WWAN autoconfig - manual
+
+15: Remote Desktop
+     - Right click "my computer" context menu > properties > "remote" tab > advanced
+	- Disable "allow this computer to be controlled"
+	- Disable "allow remote assistance connections"
+	- APPLY CHANGES and press "ok"
+
+16: Automatic updating
+     - Go to control panel > system and security > Windows update > change settings (left side menu)
+	- Enable "install Updates automatically"
+
+17: User account control configuration
+     - Go to control panel > system and security > action center > change user account control settings
+	- Move the bar all the way up to ensure no programme gets elevated rights without permission
+	- PRESS "OK" TO SAVE
+
+18: Processes and open ports
+     - Run cmd as admin and enter "netstat -ano" to list port number, IP, and PID
+	- Download procexp.exe from https://learn.microsoft.com/en-sg/sysinternals/downloads/process-explorer
+	- Agree to whatever it needs
+	- Once entering go to "options" menu and select "verify image signatures" to see if apps are real or malware pretending to be real apps
+	- Go to view tab and select columns, select PID, company name, verified signature, and image path
+	- Delete suspicious things (if information including PID do not match) from the list,  MAKE SURE TO WRITE DOWN THE PATH, DO NOT DELETE MICROSOFT PRODUCTS
+	- Microsoft default processes that must be left untouched: System Idle Process, System, Smss.exe, Crss.exe, Services.exe, Winnit.exe, SearchIndexer.exe, Lsass.exe, Winlogon.exe, Dwm.exe, Svchost.exe, Explorer.exe
+	- MAKE SURE TO VERIFY ALL INSTANCES OF SVCHOST.EXE, MALWARE LIKE IMPERSONATING IT
+	- Write down the paths for suspicious things
+	- Then right click the suspicious process and press "kill process"
+	- Go to the folder containing the file (we have the path) and SHIFT + DELETE to permanently delete it
+
+19: Startup programmes
+     - Run (Win + R) msconfig and go to "startup" tab (or open task manager > "startup" tab on Windows 10)
+	- We only need VMware things and MalwareBytes, disable everything else
+
+20: Adding / removing Windows components
+     - Go to control panel > programmes > programmes and features > "turn Windows features on and off" in left menu
+	- Turn off Games, Internet Information Services, Internet Information Services Hostable Web Core, Media Features, Print and Document Services, SNMP, Telnet Client, Telnet Server, TFTP Client / Server, Windows Powershell, XPS Services, XPS Viewer
+
+21: Disable dump file creation
+     - Control panel > system > advanced > startup / recovery > settings
+	- Change value for "write debugging information" to "none"
+
+22: Saved Windows credentials
+     - Control panel > user accounts and family safety > manage your credentials
+	- Delete all credentials so there are no entries in the box
+	- Check again to ensure removal of BOTH WINDOWS AND WEB CREDENTIALS
+
+23: Internet options (for every browser)
+     - Set homepage to google.com (but in practise using yandex.com is better for machines that we actually use)
+	- Clear ALL browsing history (cache, auto login, search history etc)
+	- Set all security settings to maximum
+	- Block all cookies
+	- Clear SSL slate
+	- Delete all autocomplete
+	- Clear all managed passwords
+
+24: Power settings
+     - Control panel > system and security > power options
+	- Enable "require a password on wakeup"
+	- Enable "require a password"
+	- SAVE CHANGES
+	- Go to change when the computer sleeps > change advanced power settings
+	- For each power plan set display > turn off display after to 1min
+	- For each power plan set hard drive > turn off display after to 30min
+	- SAVE CHANGES
+
+25: Data execution prevention
+     - Control panel > set view by to small icons (at top right)
+	- Go to performance > adjust visual effects > "data execution prevention" tab
+	- Choose turn on for all programmes except selected and select none
+	- SAVE CHANGES by pressing "apply" then "ok"
+
+26: Alternate Data Streams
+     - Get ADSspy from https://www.bleepingcomputer.com/download/ads-spy/
+	- Open it and select "full scan (all NTFS drives)"
+	- Remove whatever stream that is found, RUN THIS IN BACKGROUND AND MOVE TO NEXT STEP
+
+27: Malicious and outdated drivers
+     - Download UniBlue DriverScanner from https://rsload.net/soft/cleaner-disk/9057-driverscanner.html (original link doesnt work, I found a random Russian website instead)
+	- Scan the system then update all drivers as suggested by the app
+
+28: GMER scan
+     - Download GMER from http://www.gmer.net
+	- Run the GMER scan for rootkits and remove all programmes that is detected
+
+29: Microsoft Baseline Security Analyser scan
+     - Download MBSA from https://rsload.net/soft/security/16876-microsoft-baseline-securiy-analyzer.html (another Russian website to replace the broken link)
+	- Install MBSA using recommended settings
+	- In the app click "scan a computer"
+	- Fix whatever MBSA says
+
+30: Install a anti virus
+     - Download AVG from https://www.avg.com/en-us/homepage#pc
+	- Choose "basic protection" then "custom install" when installing, uncheck all boxes from "custom install" and "component selection", these are bloatware
+
+31: Service packs
+     - Download services packs at https://support.microsoft.com/en-us/windows/install-the-latest-updates-for-windows-92bb1064-cf3b-0b94-7c57-331f7b7db3c6#ID0EBBD=Windows_10
+	- Run whatever is downloaded
+	- This is ONLY FOR WINDOWS 7 AND OLDER, UPDATES ARE SUFFICIENT FOR NEWER SYSTEMS
+
+32: Update Windows
+     - Go to control panel > system and security / Windows update
+	- Click "check for updates"
+	- Install everything found and restart the machine
+	- DO NOT TOUCH THE MACHINE AT ALL WHILE WINDOWS IS UPDATING… I DO NOT NEED TO REMIND YOU OF THIS… I WILL GO TO STUDENT SUCCESS DEPARTMENT TO COMPLAIN ABOUT WHOEVER DOESNT FOLLOW THIS THAT HE CANNOT FOLLOW CLEARLY STATED INSTRUCTIONS
+
+33: Internet Explorer Enhanced Security Configuration SERVER ONLY
+     - Go to server manager > configure IE ESC (in right menu, towards bottom)
+	- Set both Users and Administrators option to on
+	- THIS BREAKS GOOGLE CHROME SO USE SOMETHING ELSE TO RESEARCH
+
+34: Best Practise Analyser SERVER ONLY
+     - Go to Server Manager > Roles > [role name] > summary > Best Practise Analyser
+	- DO THIS FOR EVERY SERVER ROLE
+	- For every noncompliant setting, search it online and fix it
+
+35: Configure Server manager remoting SERVER ONLY
+     - Go to Server Manager > "server summary" in right menu > configure server manager remote management
+	- Disable the feature
+
+36: Removal of Server features SERVER ONLY
+     - Go to Server Manager > features
+	- Remove anything that isnt specified in readme
+
+37: DNS SERVER ONLY
+     - Go to start > all programmes > admin tools > DNS
+	- Open configuration
+	- Right click applicable DNS server (there should only be 1) context menu > properties > advanced
+	- Enable "disable recursion"
+	- Disable "BIND secondaries"
+	- Enable "fail on load if bad zone data"
+	- Enable "enable round robin"
+	- Enable "enable netmask ordering"
+	- Enable "secure cache against pollution"
+	- Set "name checking" to "Multibyte (UTF8)"
+	- Set "load zone data on startup" to "from active directory and Registry"
+	- Disable "enable automatic scavenging of stale records"
+	- Then go to "root hints" tab under properties
+	- Set server FQDNs should only be a.root-servers.net - m.rootservers.net
+	- Open "forwarders" under properties tab
+	- Go to "forwarders"
+	- Confirm it is empty with the option "use root hints" enabled
+	- Open "debug logging" under properties
+	- Go to "debug logging"
+	- Enable everything, this is the network equivalent of audit everything
+	- Open "event logging" under properties
+	- Go to "event logging"
+	- Enable everything
+	- Open "trust anchors" under properties
+	- Confirm it is empty
+
+38: IIS SERVER ONLY
+     - Go to server manager > roles > right click "Web Server (IIS)" context menu > remove role services
+	- Disable all unnecessary roles AFTER CONFIRMING BY SEARCHING ONLINE THAT WE ACTUALLY DONT NEED THEM
+	- Below roles must be enabled:
+	     Common HTTP features > static content
+		Common HTTP features > default document
+		Common HTTP features > directory browsing
+		Common HTTP features > HTTP errors
+		Health and diagnostics > HTTP logging
+		Health and diagnostics > request monitor
+		Security > request filtering
+		Performance > static content compression
+		Management tools > IIS management console
+	- Go to start > all programmes > admin tools > Internet Information Services (IIS) manager
+	- Click on server that you are managing (should only be one), expand it out to show "sites" and "application pools" as options
+	- If possible, turn off "authentication > anonymous authentication" by selecting it and going to right menu THIS MAY RESULT IN POINT DEDUCTION, IF WE GET DEDUCTED THEN TURN IT BACK ON
+	- Go back to server and look at "default document"
+	- "Default.htm", "Default.asp", "index.htm", "index.html", "isstart.htm" are ok, remove anything suspicious
+	- Go back to server and look at "error pages"
+	- The pages should look like "%SystemDrive%\inetpub\custerr\<LANGUAGE-TAG>\[error code].htm
+	- Go back to server and look at "handler mappings"
+	- Confirm there is only "OPTIONSVerbHandler", "TRACEVerbHandler" and "StaticFile"
+	- Go back to server and look at "HTTP request headers"
+	- Clear everything there
+	- Go back to server and look at "logging"
+	- Turn it on by selecting enable on the right menu
+	- Go back to server and look at "modules"
+	- Ensure all modules are of type "native"
+	- Ensure "request filtering", "output caching", "server certificates" are all empty except for HTTPS server certificates
+	- Go back to server and look at "shared configuration"
+	- Disable it using the checkbox
+
+39: DHCP SERVER ONLY
+     - Go to server manager > tools > DHCP > select the server > "DNS" tab > properties
+	- Set "dynamically update DNS A and PTR records only if requested"
+
+40: Print and documents server SERVER ONLY
+     - Go to server manager > roles > right click "print and document services" context menu
+	- Remove unnecessary services by clicking "remove role services"
+
+41: Advanced policies THIS INVOLVES HIGH RISK OPERATIONS, ONLY DO THIS IF EVERYTHING ABOVE HAS BEEN ALL DONE
+     - Go to Microsoft Management Console > Group Policy Object Editor snap in > computer configuration > administrative templates
+	- Find the below fields and set them as specified
+	     Prevent redirection of USB devices - enabled
+		Allow printers to be published - disabled
+		Allow print spooler to accept client connections - disabled
+		Disallow installation of printers using kernel mode drivers - enabled
+		Prevent metadata retrieval from the Internet - enabled
+		Enforce disk quota limit - enabled
+		Lock enhanced storage when computer is locked - enabled
+		Enable NTFS page file encryption - enabled
+		Require a password when computer wakes - enabled
+		Detect application installers that need to be run as admin - enabled
+		Allow users to access troubleshooting content - disabled
+		Allow users to access and run troubleshooting wizards - disabled
+		Prevent access to 16 bit applications - enabled
+		Turn off auto play - enabled
+		Prevent user from running backup status and configuration programme - enabled
+		Prevent backup to network location - enabled
+		Prevent backup to optical media - enabled
+		Prevent computer from joining a home group - enabled
+		Disable remote desktop sharing - enabled
+		Prohibit new task creation - enabled
+		Always install with elevated privileges - disabled
+		Prohibit user installs - enabled
+		Allow remote shell access - disabled
+		Disable automatic install of Internet Explorer components - enabled
+		Always prompt client for a password on connection - enabled
+		Encryption levels - high (128 bit)
+		Password protect for screensaver - enabled
+
+42: IIS lockdown SERVER ONLY THIS TOOL MAY BREAK CYBERPATRIOT SCORING FUNCTION AND HAS NOT BEEN TESTED IN PRACTISE, ONLY DO THIS IF EVERYTHING ABOVE HAS BEEN ALL DONE
+     - Get the IIS Lockdown tool from https://www.softpedia.com/get/Internet/Servers/WEB-Servers/Microsoft-IIS-Lockdown-Tool.shtml#:~:text=Microsoft%20IIS%20Lockdown%20Tool%20is,configuration%20for%20your%20web%20server
+	- Open the tool and in pop up messages press "next" then "other"
+	- Disable everything that isnt needed LOOK AT README and press "next"
+	- Again disable unnecessary script maps and click "next" again
+	- Enable "IISAdmin", "IIS Samples", "MSADC, "IISHelp", "Scripts", "Running System Utilities", "Writing to content directories", "Disable Web Distributed Authorising"
+	- Click "next" then "next / finish"
+	
+DONE
